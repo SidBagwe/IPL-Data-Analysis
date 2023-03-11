@@ -1,0 +1,298 @@
+---
+title: "Data_Programming_With_R_Final_Project"
+author: "Siddhesh Bagwe - 21200534"
+date: "2022-12-18"
+output: pdf_document
+---
+
+```{r}
+library(readr)
+urlfile="https://raw.githubusercontent.com/adityarc19/IPL-analysis/main/data/2020.csv"
+data=read_csv(url(urlfile),show_col_types = FALSE)
+dim(data)
+```
+
+```{r}
+str(data)
+```
+
+## Dataset Description
+
+The Dataset gives the description of the player rankings in the Indian Premier League for the year 2020. The players are ranked with respect to RAA and wins for the data. The parameters are given below
+
+1. Rank - Rank of the player
+2. Player - Player Name
+3. Team - Team for which the player plays
+4. RAA - Runs Above Average(How well the player has performed with respect to average)
+5. Wins - The importance of players in the wins.
+6. EFscore - Score assigned to each player based on their performance.
+7. Salary - Salary of the player each year
+9. Value - Predicted value of the player based on performance
+
+We will analyze the data to get an understanding of the player values and their performance.
+
+
+## Part 1: Analysis
+
+```{r}
+summary(data)
+```
+
+From the smmary of data we can see the min, max and the quantile data for each numerical parameters. We can see that the ranks go from 1-150 proving 150 coloumns. RAA data shows that the the player having the maximum RAA has 379 points while theplayer having lowest RAA is at -292 points with the mean at 0.0133. We also see the median at -19 which shows that there are more players with RAA below 0 than those above it.For the wins too we see the min at -0.9880 and max at 1.2810 with the mean ar 0.The EFscore is distributed from 0 to 0.238 with mean at 0.06175 and median at 0.05100.
+
+```{r}
+sum(is.na(data))
+data[rowSums(is.na(data))==1,]
+```
+
+The dataset has 1 Null value which is the Salary for the player "DR Sams". We can replace the null value by the actual value of the player to remove the null value.
+
+```{r}
+data$Salary[data$Player=='DR Sams']=data$Value[data$Player=='DR Sams']
+sum(is.na(data))
+```
+
+As we have replaced the null value with the actual value we can now see that our dataset has no null values left.
+
+```{r}
+x=table(data$Team)
+x
+x=data.frame(x)
+```
+
+```{r}
+library(ggplot2)
+ggplot(data=x,aes(x=Var1,y=Freq,fill=Var1)) +
+  geom_bar(stat="identity") +
+  labs(x = "Teams", y = "Count", title="Number of players per team") +
+theme(axis.text.x=element_blank(),
+      axis.ticks.x=element_blank())
+```
+The data of number of top ranked players in the top 150 with respect to the teams is given below. We see Sunrisers Hyderabad having the most no. of players(21) in the top 150 with Mumbai Indians having the lowest count with 15.
+
+```{r}
+library(ggplot2)
+ggplot(data=data,aes(x=Rank,y=RAA)) +
+  geom_line()+labs(title = "Rank of Players with respect to RAA")
+ggplot(data=data,aes(x=Rank,y=EFscore)) +
+  geom_line()+labs(title = "Rank of Players with respect to EFscore")
+ggplot(data=data,aes(x=Rank,y=Wins)) +
+  geom_line()+labs(title = "Rank of Players with respect to Wins")
+```
+We see a negative correlation between the rank and RAA value. As RAA decreases the Rank of the player increases. The player at rank 1 has an RAA of approximately 400 while the player at rank 150 has RAA below -200.
+
+For the plot of Rank and Efscore the relationship is not linear as EFscore is assigned to the player with respect to RAA and wins combined. But we generally see that top ranked players have a higher EFscore. Some players have better EFscore but are ranked less as per the plot. This happens because their RAA score is less.
+
+Player's performance also has a negative correlation with respect to the Rank. This means that top ranked players have more impactful performances which helped their teams to win.
+
+```{r}
+y=data[data$Team=='Mumbai Indians',]
+ggplot(data=y,aes(x=Salary,y=Player)) +  scale_x_discrete(guide = guide_axis(n.dodge = 2))+
+  geom_point()+labs(title = "Salary of Mumbai Indians Plaayers")
+ggplot(data=y,aes(x=Value,y=Player)) +  scale_x_discrete(guide = guide_axis(n.dodge = 2))+
+  geom_point()+labs(title = "Actual Value of Mumbai Indians Players")
+```
+
+The above plots show the salary that the team Mumbai Indians pay to the players versus their actual value. Some players are paid more than their value while some are underpaid. For example(Jasprit Bumrah who is the top ranked player earns $1,093,750 while his value is more than double $2,448,655). We get the analysis of the wages according to the performance so that they are paid accordingly in the next year. Similarly we can check for different teams to get the analysis.
+
+```{r}
+z=data[1:20,]
+table(z$Team)
+```
+Considering the top 20 players of the year we see that Sunrisers Hyderabad has the maximum players in top 20 with 5 followed by Mumbai Indians. Rajasthan Royals and Chennai Super Kings have the lowest with just 1 player in top 20.
+
+```{r}
+library(ggplot2)
+ggplot(data=z,aes(x=Rank,y=Player)) +
+  geom_point()+labs(title = "Top 20 Players in the League")
+ggplot(data=z,aes(x=Team,y=Player)) +
+  geom_point()+scale_x_discrete(guide=guide_axis(n.dodge=3))+labs(title = "Top 20 Players in the League by Team")
+
+```
+The plot shows the top 20 players in the league by their Rank and which team they belong to. We can check this with the table above.
+
+## Observations of EDA
+
+1. There was one null value in the data.
+
+2. The parameters RAA and Wins are linearly correlated to the Rank.
+
+3. Data can be used to check if the players are under or over-paid.
+
+4. The number of players per team is found.
+
+\newpage
+
+## Part 2: R Package
+
+For this part we will use the "caret" package in R.
+
+The caret package (short for Classification And Regression Training) contains functions to streamline the model training process for complex regression and classification problems. The package utilizes a number of R packages but tries not to load them all at package start-up (by removing formal package dependencies, the package startup time can be greatly decreased). The package “suggests” field includes 32 packages.
+
+Some of the features of caret include:
+
+1. Pre-Processing: Where data is pre-processed 
+
+2. Data splitting: Splitting the training data into two similar categorical data sets is done.
+
+3. Training Model: caret provides many packages for machine learning algorithms.
+Resampling for model tuning The model can be tuned using repeated k-fold, k-fold, etc. Also, the parameter can be tuned using 'tuneLength.'
+
+4. Making Predictions: caret has the function predict which gives us the prediction of the model.
+
+We will use this package to work on regression for our model.We will predict the rank of the player based on "RAA","Wins" & "EFscore".
+
+First we need to install the caret package. We can do this using the following command
+install.packages("caret")
+```{r}
+library(caret)
+```
+
+Once the package is loaded we will use it work on our model.
+
+## Step 1: Pre-Processing:
+
+In this step we will preprocess the data and standardize it to get the proper data for further use. For this we will use the function "preProcess".
+
+```{r}
+preprocess = preProcess(data[,4:6], method=c("center", "scale"))
+data1 = predict(preprocess, data[,4:6])
+Rank=data$Rank
+data1=cbind(Rank,data1)
+summary(data1)
+```
+
+Here you can see that we have created the function preprocess to standardize our x data (making the mean 0). As we are predicting Rank the x data becomes the coloumns "RAA","Wins" & "EFscore". We first standardize this data and add the Rank to it to create dataset data1. From the summary we can see that the data is now standardized and we will now use this dataset in the next steps.
+
+## Step 2. Data splitting:
+
+In this step we split our dataset into train and test sets. To do this the function "createDataPartition" is used.
+
+```{r}
+set.seed(102)
+train = createDataPartition(
+  y = data1$Rank,
+  p = .80,
+  list = FALSE)
+training = data1[ train,]
+testing  = data1[-train,]
+nrow(training)
+nrow(testing)
+```
+
+We have first created the train function to define our split parameters. We choose Value as the parameter to be predicted and the train size as 80% which means test size will be 20%. Further we use this function on our dataset to get training and testing data. We can see the dimensions of the training and testing data to prove that the data is split in the ratio 80:20.
+
+## Step 3: Training the Model.
+
+We now use the training data to fitthe model. The model is built in caret using the "train" function.
+
+```{r}
+model= train(training[,2:4], training$Rank, method = "lm" )
+summary(model)
+```
+
+Using the train function we have built the model for the data. Though this is an example of linear regression we can also carry out other regression and classification models using caret. The final step of the model would be making predictions and testing the accuracy. From the model summary we see the R-squared value as 0.8705. We will check this using predictions.
+
+## Step 4 : Making Predictions
+
+In the final step we will make the predictions using the "predict" function.
+
+```{r}
+predictions = predict(model, testing)
+SSE <- sum((testing$Rank - predictions)^2)
+SST <- sum((testing$Rank - mean(testing$Rank))^2)
+r2 <- 1 - SSE / SST
+r2
+```
+
+We see that the value of R-squared using the prediction (0.896) is pretty close to the model summary (0.8705).
+
+This is how we can use the Caret function to create a model. We can create different regression and classification models using Caret. There are over 230 models included in the package including various tree-based models, neural nets, deep learning and much more. We have explained some functions of the caret function through our model. Similarly we can use different models in Caret
+
+\newpage
+
+## Part 3: Functions/Programming
+
+In this part we will use S3 class to provide analysis for the data. As wee have seen the parameters Rank, Player, Team, RAA, Wins and Value are the most important ones for the analysis of the dataset so we will create a s3 class with this parameters.
+
+```{r}
+a= list(Rank=data$Rank[1:10], Player=data$Player[1:10], 
+        Team=data$Team[1:10], RAA=data$RAA[1:10], Wins=data$Wins[1:10], Value=data$Value[1:10])
+class(a)='players'
+a
+
+```
+
+We can see that when we print a s3 class it gives out the output as a vector for all the values. We will define a print function to give the output a better look.
+
+```{r}
+print.players <- function(x) {
+cat('Rank :', x$Rank,'\n')
+cat('Player :', x$Player,'\n')
+cat('Team :', x$Team,'\n')
+cat('RAA :', x$RAA,'\n')
+cat('Wins :',x$Wins,'\n')
+cat('Value :', x$Value,'.')
+}
+print(a)
+```
+
+We see that the print function gives a neater look to the class.
+
+For analysis of the function we will create 3 summary functions for the class to give different analysis. First will give us the numerical analysis of the data. The second gives us the player Rank and the third will give us number of players per team.
+
+```{r}
+summary.players <- function(x){
+  cat('Numerical Summary of Data\n\n')
+  cat('Rank\n')
+  cat('Min :', min(x$Rank), 'Max :', max(x$Rank),'Mean :',mean(x$Rank), 'Median :',median(x$Rank),'\n')
+  cat('RAA\n')
+  cat('Min :', min(x$RAA), 'Max :', max(x$RAA),'Mean :',mean(x$RAA), 'Median :',median(x$RAA),'\n')
+  cat('Wins\n')
+  cat('Min :', min(x$Wins), 'Max :', max(x$Wins),'Mean :',mean(x$Wins), 'Median :',median(x$Wins),'\n')
+  cat('\n')
+  cat('Number of Players per Team\n')
+  print(table(x$Team))
+}
+
+summary(a)
+```
+Here we have created a Summary function for class players which gives the numerical analysis of the data as well as the number of players belonging to each team.
+
+```{r}
+plot.players<- function(x){
+  plot(x$Rank,x$RAA,main="Rank of Players with respect to RAA",
+ylab="RAA",xlab="Rank",type="l",col="blue")
+  plot(x$Rank,x$Wins,main="Rank of Players with respect to Wins",
+ylab="Wins",xlab="Rank",type="l",col="red")
+  plot(x$RAA,x$Wins,main="Relationship between RAA and Wins",
+ylab="Wins",xlab="RAA")
+}
+plot(a)
+```
+The plot function here gives us three plots
+
+1. Rank of Players with respect to RAA.
+
+2. Rank of Players with respect to Wins.
+
+3. Relationship between RAA and Wins
+
+We will use the print, summary and plot functions on other lists with the same class. We will use players from rank 21-30 for this.
+
+```{r}
+b= list(Rank=data$Rank[21:30], Player=data$Player[21:30], 
+        Team=data$Team[21:30], RAA=data$RAA[21:30], Wins=data$Wins[21:30], Value=data$Value[21:30])
+class(b)='players'
+print(b)
+```
+
+```{r}
+summary(b)
+```
+
+```{r}
+plot(b)
+```
+
+So we can use the Functions for any S3 class of this data. This will help us understanding the data and carrying out the analysis for the data of any other year.
