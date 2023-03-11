@@ -1,6 +1,6 @@
 ---
 title: "Data_Programming_With_R_Final_Project"
-author: "Siddhesh Bagwe - 21200534"
+author: "Siddhesh Bagwe 
 date: "2022-12-18"
 output: pdf_document
 ---
@@ -18,18 +18,6 @@ str(data)
 
 ## Dataset Description
 
-The Dataset gives the description of the player rankings in the Indian Premier League for the year 2020. The players are ranked with respect to RAA and wins for the data. The parameters are given below
-
-1. Rank - Rank of the player
-2. Player - Player Name
-3. Team - Team for which the player plays
-4. RAA - Runs Above Average(How well the player has performed with respect to average)
-5. Wins - The importance of players in the wins.
-6. EFscore - Score assigned to each player based on their performance.
-7. Salary - Salary of the player each year
-9. Value - Predicted value of the player based on performance
-
-We will analyze the data to get an understanding of the player values and their performance.
 
 
 ## Part 1: Analysis
